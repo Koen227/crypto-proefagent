@@ -63,6 +63,13 @@ DEFAULT_PARAMS = {
     "momMaxPosities": 1, "momBudget": 150.0,
     "momVolFactor": 3.0,       # 24-uurs handel minstens 3x het weekgemiddelde
     "momStop": 0.08, "momTrailing": 0.10, "momMaxDagen": 14,
+    # extra remmen: "uit", "schaduw" (alleen noteren) of "aan" (echt tegenhouden)
+    "filterNieuws": "aan",     # geen aankoop bij slecht nieuws (hack, delisting, rechtszaak...) in de laatste 48 uur
+    "filterFG": "schaduw",     # geen trend-/momentumaankoop bij extreme hebzucht in de markt
+    "filterFutures": "schaduw",# geen aankoop als hefboominzet en koers samen hard oplopen
+    "fgHebzucht": 80,          # Fear & Greed-index vanaf 80 = extreme hebzucht
+    "oiStijging": 0.25, "oiKoersStijging": 0.10,  # +25% open interest en +10% koers in 24 uur
+    "nieuwsUren": 48,
     "maxSprong": 0.25,
     "maxOuderdom": 1800,       # koers ouder dan 30 minuten = niet gebruiken
     "maxPunten": 60, "maxEquity": 1000, "maxTrades": 300, "maxLog": 150,
@@ -73,6 +80,18 @@ def eur(v):
     return ("-" if v < 0 else "") + "€" + s
 
 def naam(c): return NAMES.get(c, c)
+
+NEGATIEF = ("hack", "hacked", "exploit", "drained", "stolen", "delist", "lawsuit", "sued", "charges",
+            "fraud", "rug pull", "rugpull", "insolven", "bankrupt", "halts withdrawals", "suspends withdrawals",
+            "pauses withdrawals", "security incident", "vulnerability", "attack", "scam", "ponzi", "investigation")
+FILTERNAAM = {"nieuws": "slecht nieuws", "fg": "extreme hebzucht", "futures": "veel hefboom"}
+
+def noemt_munt(titel, c):
+    """Wordt munt c genoemd in de kop? Ticker in hoofdletters (min. 3 tekens) of de naam met hoofdletter."""
+    if len(c) >= 3 and re.search(rf"(?<![A-Za-z0-9$]){re.escape(c)}(?![A-Za-z0-9])", titel):
+        return True
+    n = NAMES.get(c)
+    return bool(n and len(n) >= 3 and n != c and re.search(rf"\b{re.escape(n)}\b", titel))
 
 POTNAAM = {"trend": "trendvolgen", "terugveer": "terugveren", "momentum": "momentum-uitbraak"}
 
@@ -130,8 +149,20 @@ def parse_tickers(text, now, max_age):
         spread = (ask - bid) / ((ask + bid) / 2) if bid > 0 and ask > bid else 0.0
         vol = _f(r.get("volume_value")) + _f((T.get(base + "USDT") or {}).get("volume_value"))
         out[base] = {"prijs": last * fx, "spread": spread, "vol": vol}
+    for name, r in T.items():
+        n = (name or "").replace("-", "")
+        if n.endswith("USDPERP") and n[:-7] in out:
+            oi = _f(r.get("open_interest"))
+            if oi > 0: out[n[:-7]]["oi"] = oi
     notes = [f"{oud} koersen waren ouder dan 30 minuten en zijn niet gebruikt."] if oud > 100 else []
     return out, fx, notes
+
+def parse_fng(text):
+    try:
+        m = re.search(r"\{.*\}", text, re.S); d = json.loads(m.group(0))["data"][0]
+        return {"waarde": int(d["value"]), "label": d.get("value_classification", ""), "t": int(d.get("timestamp", 0))}
+    except Exception:
+        return None
 
 def week_start(t):
     d = dt.datetime.fromtimestamp(t, dt.timezone.utc)
@@ -140,7 +171,7 @@ def week_start(t):
 def tijd(t):
     return dt.datetime.fromtimestamp(t, dt.timezone(dt.timedelta(hours=2))).strftime("%d-%m %H:%M")
 
-def run(state, tick, now, notes=()):
+def run(state, tick, now, notes=(), fng=None, news=None):
     P = {**DEFAULT_PARAMS, **state.get("params", {})}
     for k, v in DEFAULT_PARAMS.items():          # nieuwe regels gaan voor oude waarden
         if k in ("maxPunten",): P[k] = v
@@ -192,6 +223,68 @@ def run(state, tick, now, notes=()):
     for c in list(state.get("vols", {})):
         if c not in volg: del state["vols"][c]
 
+    # 2b. Signalen: open interest, Fear & Greed, nieuws
+    for c in volg:
+        t = tick.get(c)
+        if t and t.get("oi"):
+            o = state.setdefault("oi", {}).setdefault(c, []); o.append(float(f"{t['oi']:.6g}")); del o[:-P["maxPunten"]]
+    for c in list(state.get("oi", {})):
+        if c not in volg: del state["oi"][c]
+    if fng is not None:
+        state["fng"] = fng
+    alarm = state.setdefault("nieuwsAlarm", {})
+    for c in list(alarm):
+        if alarm[c]["tot"] < now: del alarm[c]
+    if news:
+        gezien = set(state.get("nieuwsGezien", []))
+        lijst = state.setdefault("nieuws", [])
+        for it in sorted(news, key=lambda x: x.get("t") or 0):
+            titel, t_it = it.get("titel") or "", it.get("t") or now
+            key = titel[:120]
+            if not titel or key in gezien or now - t_it > P["nieuwsUren"] * 3600: continue
+            gezien.add(key)
+            munten = sorted(c for c in set(U) | held if noemt_munt(titel, c))
+            if not munten: continue
+            neg = any(w in titel.lower() for w in NEGATIEF)
+            rem = [c for c in munten if c not in ("BTC", "ETH")] if neg else []  # BTC/ETH staan in bijna elk bericht
+            lijst.append({"t": t_it, "titel": titel, "bron": it.get("bron", ""), "munten": munten, "negatief": neg, "rem": rem})
+            if neg:
+                for c in rem:
+                    alarm[c] = {"tot": t_it + P["nieuwsUren"] * 3600, "titel": titel}
+                    if c in held:
+                        msgs.append(f"Let op: slecht nieuws over {naam(c)}, dat de agent bezit: \"{titel}\". Verkopen gebeurt nog via de gewone regels.")
+        del lijst[:-20]
+        state["nieuwsGezien"] = list(gezien)[-100:]
+
+    def filters(c, potje, closes):
+        """Geeft [(filter, reden)] terug van remmen die deze aankoop zouden tegenhouden."""
+        hits = []
+        if P["filterNieuws"] != "uit" and c in alarm:
+            hits.append(("nieuws", f"slecht nieuws: \"{alarm[c]['titel'][:90]}\""))
+        f = state.get("fng")
+        if P["filterFG"] != "uit" and f and potje in ("trend", "momentum") and f.get("waarde", 0) >= P["fgHebzucht"]:
+            hits.append(("fg", f"extreme hebzucht in de markt (Fear & Greed {f['waarde']})"))
+        o = state.get("oi", {}).get(c, [])
+        if P["filterFutures"] != "uit" and len(o) >= 7 and len(closes) >= 7 and o[-7] > 0:
+            oi24, k24 = o[-1] / o[-7] - 1, closes[-1] / closes[-7] - 1
+            if oi24 >= P["oiStijging"] and k24 >= P["oiKoersStijging"]:
+                hits.append(("futures", f"hefboominzet +{oi24*100:.0f}% en koers +{k24*100:.0f}% in 24 uur"))
+        return hits
+
+    def toets(c, potje):
+        """True = kopen mag. Houdt bij welke remmen ingrepen of in schaduw zouden ingrijpen."""
+        closes = [x[1] for x in state["prices"].get(c, [])]
+        hits = filters(c, potje, closes)
+        fs = state.setdefault("filterStats", {})
+        harde = [(n, r) for n, r in hits if P[{"nieuws": "filterNieuws", "fg": "filterFG", "futures": "filterFutures"}[n]] == "aan"]
+        for n, _ in hits:
+            d = fs.setdefault(n, {"geblokkeerd": 0, "schaduw": 0})
+            d["geblokkeerd" if harde else "schaduw"] += 1
+        if harde:
+            msgs.append(f"Aankoop {naam(c)} ({POTNAAM[potje]}) tegengehouden: " + "; ".join(r for _, r in harde) + ".")
+            return False, []
+        return True, [n for n, _ in hits]
+
     def price_of(c):
         s = state["prices"].get(c) or []
         return s[-1][1] if s else None
@@ -217,12 +310,14 @@ def run(state, tick, now, notes=()):
         state["paused"] = True
         msgs.append(f"Weekverlies groter dan {int(P['weekVerliesStop']*100)}%: geen nieuwe aankopen tot maandag. Verkopen blijven mogelijk.")
 
-    def trade(c, side, qty, price, potje, reason, pos=None):
+    def trade(c, side, qty, price, potje, reason, pos=None, tags=None):
         kostpct = P["kosten"] + spreads.get(c, 0) / 2
         bruto = qty * price; kost = bruto * kostpct
         state["stats"]["kosten"] += kost
         rec = {"id": f"{now}-{c}-{side}", "t": now, "coin": c, "naam": naam(c), "potje": potje, "side": side,
                "prijs": float(f"{price:.6g}"), "aantal": qty, "bedrag": round(bruto, 2), "kosten": round(kost, 2), "reden": reason}
+        if tags: rec["filters"] = tags
+        if pos and pos.get("filters"): rec["filters"] = pos["filters"]
         if side == "koop":
             state["cash"] -= bruto + kost
         else:
@@ -233,6 +328,9 @@ def run(state, tick, now, notes=()):
             state["stats"]["winst" if pnl > 0 else "verlies"] += 1
             sp = state.setdefault("statsPot", {}).setdefault(potje, {"gesloten": 0, "winst": 0, "resultaat": 0.0})
             sp["gesloten"] += 1; sp["winst"] += pnl > 0; sp["resultaat"] = round(sp["resultaat"] + pnl, 2)
+            for fnaam in pos.get("filters") or []:   # wat had deze rem opgeleverd? (negatief resultaat = rem had geld bespaard)
+                d = state.setdefault("filterStats", {}).setdefault(fnaam, {"geblokkeerd": 0, "schaduw": 0})
+                d["schaduwResultaat"] = round(d.get("schaduwResultaat", 0) + pnl, 2); d["schaduwGesloten"] = d.get("schaduwGesloten", 0) + 1
         state["trades"].append(rec); del state["trades"][:-P["maxTrades"]]
         return rec, kostpct
 
@@ -310,10 +408,12 @@ def run(state, tick, now, notes=()):
         budget = min(state["cash"] / (1 + kp), equity() / (P["maxPosities"] + P["momMaxPosities"]))
         if budget < 25:
             overgeslagen += 1; continue
+        ok, tags = toets(c, potje)
+        if not ok: continue
         p = last[c]
-        rec, _ = trade(c, "koop", budget / p, p, potje, uitleg)
+        rec, _ = trade(c, "koop", budget / p, p, potje, uitleg, tags=tags)
         state["positions"].append({"coin": c, "potje": potje, "qty": budget / p, "entry": p, "entryT": now,
-                                   "piek": p, "inleg": round(budget * (1 + kp), 2)})
+                                   "piek": p, "inleg": round(budget * (1 + kp), 2), "filters": tags})
         msgs.append(f"GEKOCHT {naam(c)} voor {eur(rec['bedrag'])} ({POTNAAM[potje]}). {uitleg}")
     momkansen.sort()
     for _, c, uitleg in momkansen:
@@ -324,10 +424,12 @@ def run(state, tick, now, notes=()):
         budget = min(state["cash"] / (1 + kp), P["momBudget"])
         if budget < 25:
             overgeslagen += 1; continue
+        ok, tags = toets(c, "momentum")
+        if not ok: continue
         p = last[c]
-        rec, _ = trade(c, "koop", budget / p, p, "momentum", uitleg)
+        rec, _ = trade(c, "koop", budget / p, p, "momentum", uitleg, tags=tags)
         state["positions"].append({"coin": c, "potje": "momentum", "qty": budget / p, "entry": p, "entryT": now,
-                                   "piek": p, "inleg": round(budget * (1 + kp), 2)})
+                                   "piek": p, "inleg": round(budget * (1 + kp), 2), "filters": tags})
         msgs.append(f"GEKOCHT {naam(c)} voor {eur(rec['bedrag'])} (momentum-uitbraak). {uitleg}")
 
     # 7. Stand bijwerken
@@ -340,6 +442,7 @@ def run(state, tick, now, notes=()):
     actief = len(U) - inloop
     state["universeInfo"] = {"totaal": len(U), "inloop": inloop, "actief": actief, "trend": trend_cnt}
     state["names"] = {c: naam(c) for c in set(U) | held | bench}
+    state["filterModus"] = {"nieuws": P["filterNieuws"], "fg": P["filterFG"], "futures": P["filterFutures"]}
     if not any(m.startswith(("GEKOCHT", "VERKOCHT")) for m in msgs):
         delen = [f"{len(state['positions'])} posities vastgehouden" if state["positions"] else "geen posities",
                  f"{len(U)} munten gevolgd, waarvan {inloop} nog in inloop",
@@ -358,12 +461,16 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--state", required=True); ap.add_argument("--tickers", required=True)
     ap.add_argument("--out", required=True); ap.add_argument("--now", type=int)
+    ap.add_argument("--fng", help="ruwe JSON van api.alternative.me/fng (optioneel)")
+    ap.add_argument("--news", help="JSON-lijst [{titel, t, bron}] met nieuwskoppen (optioneel)")
     a = ap.parse_args()
     state = json.load(open(a.state))
     now = a.now or int(time.time())
     P = {**DEFAULT_PARAMS, **state.get("params", {})}
     tick, fx, notes = parse_tickers(open(a.tickers).read(), now, P["maxOuderdom"])
-    state, msgs = run(state, tick, now, notes)
+    fng = parse_fng(open(a.fng).read()) if a.fng else None
+    news = json.load(open(a.news)) if a.news else None
+    state, msgs = run(state, tick, now, notes, fng=fng, news=news)
     json.dump(state, open(a.out, "w"), separators=(",", ":"))
     print(f"Check {tijd(now)} — waarde {eur(state['equity'][-1][1])} (1 USD = €{fx:.4f})")
     for m in msgs: print("-", m)

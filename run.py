@@ -31,6 +31,42 @@ def haal_koersen(pogingen=3):
     raise RuntimeError(f"Koersen niet op te halen: {laatste_fout}")
 
 
+FNG_API = "https://api.alternative.me/fng/?limit=1"
+RSS = [("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/"),
+       ("Cointelegraph", "https://cointelegraph.com/rss")]
+
+
+def haal_tekst(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "crypto-proefagent/1.0"})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.read().decode("utf-8", "replace")
+
+
+def haal_fng():
+    try:
+        return bot.parse_fng(haal_tekst(FNG_API))
+    except Exception as e:
+        print(f"Fear & Greed niet beschikbaar: {e}")
+        return None
+
+
+def haal_nieuws():
+    import email.utils, xml.etree.ElementTree as ET
+    items = []
+    for bron, url in RSS:
+        try:
+            root = ET.fromstring(haal_tekst(url))
+            for it in root.iter("item"):
+                titel = (it.findtext("title") or "").strip()
+                datum = it.findtext("pubDate")
+                t = int(email.utils.parsedate_to_datetime(datum).timestamp()) if datum else None
+                if titel:
+                    items.append({"titel": titel, "t": t, "bron": bron})
+        except Exception as e:
+            print(f"Nieuws van {bron} niet beschikbaar: {e}")
+    return items
+
+
 def naar_ticker_formaat(rows):
     """Zet de korte API-velden om naar het formaat dat bot.parse_tickers verwacht."""
     out = []
@@ -39,7 +75,8 @@ def naar_ticker_formaat(rows):
         t = r.get("t")
         ts = dt.datetime.fromtimestamp(t / 1000, dt.timezone.utc).isoformat().replace("+00:00", "Z") if t else None
         out.append({"instrument_name": naam, "last": r.get("a"), "best_bid": r.get("b"),
-                    "best_ask": r.get("k"), "volume_value": r.get("vv"), "timestamp": ts})
+                    "best_ask": r.get("k"), "volume_value": r.get("vv"), "timestamp": ts,
+                    "open_interest": r.get("oi")})
     return {"data": out}
 
 
@@ -49,7 +86,7 @@ def main():
     P = {**bot.DEFAULT_PARAMS, **state.get("params", {})}
     tickers = naar_ticker_formaat(haal_koersen())
     tick, fx, notes = bot.parse_tickers(json.dumps(tickers), now, P["maxOuderdom"])
-    state, msgs = bot.run(state, tick, now, notes)
+    state, msgs = bot.run(state, tick, now, notes, fng=haal_fng(), news=haal_nieuws())
     tmp = STATE + ".tmp"
     with open(tmp, "w") as f:
         json.dump(state, f, separators=(",", ":"))

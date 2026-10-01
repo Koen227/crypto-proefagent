@@ -79,6 +79,17 @@ th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);verti
 th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
 td.n{text-align:right;white-space:nowrap} th.n{text-align:right}
 td.why{color:var(--fg2);min-width:220px}
+.sig{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.sigc{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:4px;min-width:0}
+.sigc .l{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.sigc .v{font-weight:600}
+.sigc .s{font-size:13px;color:var(--fg2)}
+.mode{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:1px 8px;border-radius:99px;justify-self:start}
+.mode.aan{color:var(--up);background:color-mix(in srgb,var(--up) 13%,transparent)}
+.mode.schaduw{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.mode.uit{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,transparent)}
+.sub3{font-size:14px;font-weight:600;margin:16px 0 8px}
+.neg{color:var(--down);font-weight:600}
 .stats{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px;color:var(--fg2)}
 .stats b{color:var(--fg);font-variant-numeric:tabular-nums}
 details{border-top:1px solid var(--line);padding-top:10px}
@@ -131,6 +142,14 @@ summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <ul class="log" id="log"><li><time>—</time><span>De eerste check volgt binnen 4 uur.</span></li></ul>
     </section>
   </div>
+
+  <section class="card">
+    <h2>Signalen</h2>
+    <p class="sub">Extra remmen naast de koersregels. In schaduwmodus houdt een rem niets tegen, maar noteert hij wanneer hij dat zou doen. Zo meten we eerst of hij helpt.</p>
+    <div class="sig" id="sig"><p class="empty">Nog geen signalen ontvangen.</p></div>
+    <h3 class="sub3">Nieuws over gevolgde munten</h3>
+    <ul class="log" id="news"><li><time>—</time><span>Nog geen relevante koppen.</span></li></ul>
+  </section>
 
   <section class="card">
     <h2>Transacties</h2>
@@ -238,6 +257,20 @@ function render(s){
   }
   const sp=s.statsPot||{}; const PN={trend:'Trendvolgen',terugveer:'Terugveren',momentum:'Momentum-uitbraak'};
   $('pots').innerHTML=Object.keys(PN).filter(k=>sp[k]).map(k=>`<span>${PN[k]}: <b>${sp[k].gesloten}</b> afgesloten, <b>${sp[k].winst}</b> met winst, resultaat <b class="${cls(sp[k].resultaat)}">${eur(sp[k].resultaat)}</b></span>`).join('');
+  const fm=s.filterModus||{}, fs=s.filterStats||{}, f=s.fng;
+  const ML={aan:'aan',schaduw:'schaduw',uit:'uit'};
+  const kaart=(titel,key,waarde,uitleg)=>{const st=fs[key]||{};const m=fm[key]||'uit';
+    const telling=m==='aan'?`${st.geblokkeerd||0}× tegengehouden`:`${st.schaduw||0}× zou hebben ingegrepen`+(st.schaduwGesloten?`; die aankopen leverden samen ${eur(st.schaduwResultaat||0)} op`:'');
+    return `<div class="sigc"><span class="l">${titel}</span><span class="mode ${m}">${ML[m]||m}</span><span class="v">${waarde}</span><span class="s">${uitleg}</span><span class="s">${telling}</span></div>`;};
+  if(fm.nieuws||f){
+    const al=Object.keys(s.nieuwsAlarm||{});
+    $('sig').innerHTML=
+      kaart('Nieuwsrem','nieuws',al.length?`Rem op: ${al.map(nm).join(', ')}`:'Geen slecht nieuws','Geen aankoop binnen 48 uur na een kop over een hack, delisting, rechtszaak of fraude.')+
+      kaart('Marktstemming','fg',f?`Fear & Greed: ${f.waarde} (${esc(f.label||'')})`:'Nog niet opgehaald','Bij 80 of hoger (extreme hebzucht) geen nieuwe trend- of momentumaankopen.')+
+      kaart('Hefboom','futures',`${Object.keys(s.oi||{}).length} munten gevolgd`,'Geen aankoop als de inzet met hefboom (+25%) en de koers (+10%) samen hard oplopen in 24 uur.');
+  }
+  const nw=(s.nieuws||[]).slice().reverse().slice(0,12);
+  if(nw.length) $('news').innerHTML=nw.map(n=>`<li><time>${when(n.t)}</time><span>${n.negatief?(n.rem&&n.rem.length?'<span class="neg">Slecht nieuws, rem actief · </span>':'<span style="color:var(--warn);font-weight:600">Mogelijk slecht nieuws, geen rem · </span>'):''}${n.munten.map(nm).join(', ')}: ${esc(n.titel)} <span style="color:var(--muted)">(${esc(n.bron||'')})</span></span></li>`).join('');
   drawChart(eq,start);
 }
 
