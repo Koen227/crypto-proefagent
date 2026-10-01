@@ -1,13 +1,22 @@
 # Crypto Proefagent
 
-Papieren handel (fictief geld, €1.000) in een gefilterde selectie crypto's van Crypto.com.
-Elke 4 uur draait GitHub automatisch één check:
+Papieren handel (fictief geld, €1.000) op de koersen van Bitvavo. Er wordt nergens echt gehandeld
+en er zijn geen sleutels of wachtwoorden nodig: alle gegevens zijn openbaar.
 
-1. `run.py` haalt live koersen op bij de openbare Crypto.com-API;
-2. `bot.py` past de handelsregels toe (trendvolgen en terugveren, met verliesgrenzen);
-3. de nieuwe stand komt in `docs/state.json`;
-4. het dashboard (`docs/index.html`, via GitHub Pages) laat de stand zien.
+GitHub draait `run.py` elke 15 minuten:
 
-Er wordt nergens echt gehandeld en er zijn geen sleutels of wachtwoorden nodig.
+- **elke 15 minuten bewaken:** stopverliezen, winst vastzetten, nieuwsrem;
+- **elke 4 uur scannen:** alle euromarkten van Bitvavo bekijken en kansen zoeken met drie strategieën
+  (trendvolgen, terugveren, momentum-uitbraak);
+- **kosten-batenafweging:** alleen kopen als de verwachte beweging minstens 3x de totale kosten is
+  (transactiekosten, bied-laatverschil en wegloop in het orderboek);
+- **remmen:** slecht nieuws (aan), extreme hebzucht en veel hefboom (schaduwmodus: alleen meten).
 
-**Met de hand een check starten:** tabblad *Actions* → *Crypto Proefagent – check elke 4 uur* → *Run workflow*.
+Bestanden:
+
+- `bot.py` – de handelsregels;
+- `run.py` – haalt gegevens op en draait één check;
+- `data/state.json` – de volledige stand;
+- `docs/index.html` + `docs/stand.json` – het dashboard (GitHub Pages).
+
+**Met de hand een check starten:** tabblad *Actions* → *Crypto Proefagent* → *Run workflow*.
