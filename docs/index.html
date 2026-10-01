@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Crypto Proefagent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* Layout: controlekamer op één kolom — stand bovenaan, grafiek, dan posities, logboek en transacties; regels onderaan */
+:root{
+  --bg:#f2f4f3; --panel:#ffffff; --line:#d7dddb; --fg:#121816; --fg2:#47524e; --muted:#76817d;
+  --accent:#0f6b5c; --accent-soft:#e0efeb;
+  --s1:#2a78d6; --s2:#eb6834;
+  --up:#16794a; --down:#c23b32; --warn:#9a6200;
+  --display:"Unbounded","Arial Black",Arial,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101413; --panel:#181e1c; --line:#2b3431; --fg:#edf2f0; --fg2:#b3bfbb; --muted:#85918d;
+  --accent:#5cc3ad; --accent-soft:#1a2f2a; --s1:#3987e5; --s2:#d95926;
+  --up:#4cc47f; --down:#f06a60; --warn:#e3a54a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101413; --panel:#181e1c; --line:#2b3431; --fg:#edf2f0; --fg2:#b3bfbb; --muted:#85918d;
+  --accent:#5cc3ad; --accent-soft:#1a2f2a; --s1:#3987e5; --s2:#d95926;
+  --up:#4cc47f; --down:#f06a60; --warn:#e3a54a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:20px}
+header{display:grid;gap:10px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(22px,4vw,30px);margin:0;letter-spacing:-.01em}
+.lead{color:var(--fg2);margin:0;max-width:66ch}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill.on{color:var(--up);background:color-mix(in srgb,var(--up) 13%,transparent)}
+.pill.pause{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.pill.wait{color:var(--muted);background:color-mix(in srgb,var(--muted) 14%,transparent)}
+.meta{font-size:13px;color:var(--muted)}
+.stand{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px}
+@media (max-width:680px){.stand{grid-template-columns:minmax(0,1fr)}}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.tile .l{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.tile .v{font-family:var(--display);font-weight:500;font-size:28px;line-height:1.15;margin-top:6px}
+.tile.main{border-color:var(--accent);background:linear-gradient(0deg,var(--panel),var(--panel)),var(--panel)}
+.tile.main .v{font-size:34px}
+.tile .d{font-size:14px;margin-top:4px;font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+.verdict{background:var(--accent-soft);border-radius:12px;padding:12px 16px;font-size:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h2{font-family:var(--display);font-weight:500;font-size:17px;margin:0 0 4px}
+.card .sub{color:var(--fg2);font-size:14px;margin:0 0 12px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--fg2);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:3px;border-radius:2px;display:inline-block}
+.sw.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)}
+.chartbox{position:relative}
+svg{display:block;width:100%;height:auto}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.14);min-width:190px;font-variant-numeric:tabular-nums}
+.tip div{display:flex;justify-content:space-between;gap:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.pos{display:grid;gap:10px}
+.posrow{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.posrow b{font-weight:600}
+.posrow .r{text-align:right;font-variant-numeric:tabular-nums}
+.posrow .s{font-size:13px;color:var(--fg2)}
+.tag{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-left:6px}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:10px;max-height:420px;overflow:auto}
+.log li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;font-size:14px}
+.log time{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;padding-top:2px}
+.log .buy{color:var(--up);font-weight:600}
+.log .sell{color:var(--s2);font-weight:600}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.n{text-align:right;white-space:nowrap} th.n{text-align:right}
+td.why{color:var(--fg2);min-width:220px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;font-size:14px;color:var(--fg2)}
+.stats b{color:var(--fg);font-variant-numeric:tabular-nums}
+details{border-top:1px solid var(--line);padding-top:10px}
+details+details{margin-top:10px}
+summary{cursor:pointer;font-weight:600}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.rules{display:grid;gap:8px;margin-top:10px;color:var(--fg2);font-size:14.5px;max-width:74ch}
+.rules p{margin:0}
+.rules strong{color:var(--fg)}
+</style>
+<style>body{margin:0}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="top">
+      <h1>Crypto Proefagent</h1>
+      <span class="pill wait" id="status">Wacht op eerste check</span>
+    </div>
+    <p class="lead">Handelt met €1.000 nepgeld in het brede crypto-aanbod van Crypto.com: tot 40 munten met genoeg handel, zonder memecoins, stablecoins of verdachte projecten. Elke 4 uur haalt de agent via GitHub live koersen op bij Crypto.com en beslist of hij koopt, vasthoudt of verkoopt. Er gaat geen echt geld om.</p>
+    <div class="meta" id="meta">Nog geen checks uitgevoerd.</div>
+    <div class="meta" id="uni"></div>
+  </header>
+
+  <div class="stand">
+    <div class="tile main"><div class="l">Waarde van de agent</div><div class="v" id="vAgent">€1.000</div><div class="d" id="dAgent">Start: €1.000</div></div>
+    <div class="tile"><div class="l">Als je het mandje had vastgehouden</div><div class="v" id="vBtc">€1.000</div><div class="d" id="dBtc">Vergelijking 1</div></div>
+    <div class="tile"><div class="l">Als je niets had gedaan</div><div class="v">€1.000</div><div class="d" style="color:var(--muted)">Vergelijking 2</div></div>
+  </div>
+  <div class="verdict" id="verdict">Zodra de eerste checks binnen zijn, staat hier in één zin hoe de agent het doet ten opzichte van het mandje vasthouden.</div>
+
+  <section class="card">
+    <h2>Verloop van de proef</h2>
+    <p class="sub">Waarde van de agent tegenover 9 grote munten (Bitcoin, Ethereum, Solana, XRP, Cardano, Chainlink, Avalanche, Polkadot, Litecoin) in gelijke delen kopen en laten liggen, per check.</p>
+    <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Agent</span><span><i class="sw" style="background:var(--s2)"></i>Mandje vasthouden</span><span><i class="sw dash"></i>Start €1.000</span></div>
+    <div class="chartbox" id="cb"><svg id="ch" viewBox="0 0 760 300" role="img" aria-label="Waarde van de agent en van het mandje vasthouden per check"></svg><div class="tip" id="tip" hidden></div></div>
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <h2>Wat de agent nu bezit</h2>
+      <p class="sub">Maximaal vier munten tegelijk, rond een kwart van het geld per munt.</p>
+      <div class="pos" id="pos"><p class="empty">Nog geen posities. Vrij saldo: €1.000.</p></div>
+    </section>
+    <section class="card">
+      <h2>Logboek</h2>
+      <p class="sub">Wat de agent bij elke check deed en waarom. Nieuwste bovenaan.</p>
+      <ul class="log" id="log"><li><time>—</time><span>De eerste check volgt binnen 4 uur.</span></li></ul>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Transacties</h2>
+    <div class="stats" id="stats"><span>Nog geen transacties.</span></div>
+    <div class="tw" style="margin-top:12px"><table><thead><tr><th>Moment</th><th>Munt</th><th>Actie</th><th class="n">Bedrag</th><th class="n">Resultaat</th><th>Reden</th></tr></thead><tbody id="tb"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Spelregels van de agent</h2>
+    <details open>
+      <summary>Wanneer koopt hij?</summary>
+      <div class="rules">
+        <p><strong>Trendvolgen.</strong> De koers zit in een stijgende lijn (het gemiddelde van de laatste ruim 2,5 dag ligt boven dat van de laatste bijna 7 dagen) en veert net weer omhoog na een kleine dip.</p>
+        <p><strong>Terugveren.</strong> De koers is in korte tijd ongewoon hard gezakt. De agent koopt in de verwachting dat een deel van die daling herstelt.</p>
+        <p>Zijn er meer kansen dan plekken, dan kiest hij de sterkste. Per munt hooguit één positie, maximaal vier tegelijk, elk rond een kwart van de totale waarde. Na een stopverlies wacht hij 24 uur voordat hij die munt opnieuw koopt.</p>
+      </div>
+    </details>
+    <details open>
+      <summary>Welke munten mogen meedoen?</summary>
+      <div class="rules">
+        <p><strong>Genoeg handel.</strong> Een munt komt pas in beeld bij minstens $250.000 handel per dag op Crypto.com, en valt eruit onder $100.000. Zo blijven kleine munten met een extreem lage waardering buiten de deur. De agent volgt hooguit de 40 meest verhandelde.</p>
+        <p><strong>Uitgesloten.</strong> Memecoins, stablecoins, goudtokens, verpakte varianten van andere munten en ingestorte projecten zoals Terra Luna Classic.</p>
+        <p><strong>Inloop van 7 dagen.</strong> Een nieuwe munt wordt eerst een week gevolgd voordat de agent hem mag kopen.</p>
+        <p><strong>Niet bij twijfel.</strong> Geen aankoop als het verschil tussen bied- en laatprijs groter is dan 1%, of als de koers meer dan 40% onder het hoogste punt van de afgelopen week staat. Valt een munt die hij bezit uit de selectie, dan verkoopt hij.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Wanneer verkoopt hij?</summary>
+      <div class="rules">
+        <p><strong>Bij trendvolgen:</strong> als de stijgende lijn voorbij is, als de koers 6% onder de aankoopprijs zakt, of als de koers 7% daalt vanaf het hoogste punt sinds aankoop.</p>
+        <p><strong>Bij terugveren:</strong> bij 4% winst, bij 5% verlies, als de koers weer normaal is, of na 7 dagen zonder herstel.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Veiligheidsregels</summary>
+      <div class="rules">
+        <p>Elke aankoop en verkoop kost 0,25% plus de helft van het verschil tussen bied- en laatprijs, zoals bij een echte exchange. Bij kleinere munten is dat duurder. Die kosten zitten al in alle bedragen.</p>
+        <p>Zakt de waarde in één week meer dan 8%, dan koopt de agent tot maandag niets meer. Verkopen mag wel.</p>
+        <p>Wijkt een koers ineens meer dan 25% af van de vorige check, dan negeert de agent die als mogelijke datafout.</p>
+        <p>Koersen die ouder zijn dan 30 minuten gebruikt de agent niet. Alle bedragen zijn in euro's, omgerekend vanuit de dollarkoersen van Crypto.com.</p>
+      </div>
+    </details>
+  </section>
+</div>
+
+<script>
+(function(){
+const COINS={BTC:"Bitcoin",ETH:"Ethereum",SOL:"Solana",XRP:"XRP",ADA:"Cardano",LINK:"Chainlink",AVAX:"Avalanche",DOT:"Polkadot",LTC:"Litecoin"};
+const $=id=>document.getElementById(id);
+const eur=v=>(v<0?'−':'')+'€'+Math.abs(v).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const eur0=v=>(v<0?'−':'')+'€'+Math.round(Math.abs(v)).toLocaleString('nl-NL');
+const pct=v=>(v>=0?'+':'−')+Math.abs(v).toLocaleString('nl-NL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+const when=t=>new Date(t*1000).toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const cls=v=>v>0.005?'up':(v<-0.005?'down':'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let NAMES={};const nm=c=>NAMES[c]||COINS[c]||c;
+function render(s){
+  NAMES=s.names||{};
+  const ui=s.universeInfo; if(ui) $('uni').textContent=`Volgt nu ${ui.totaal} munten: ${ui.actief} handelbaar, ${ui.inloop} nog in inloop. ${ui.trend} daarvan ${ui.trend===1?"zit":"zitten"} in een stijgende trend.`;
+  const start=(s.params&&s.params.startKapitaal)||1000;
+  const eq=s.equity||[]; const lastEq=eq.length?eq[eq.length-1]:null;
+  // status
+  const st=$('status');
+  if(!s.lastRun){st.className='pill wait';st.textContent='Wacht op eerste check';}
+  else if(s.paused){st.className='pill pause';st.textContent='Gepauzeerd tot maandag';}
+  else{st.className='pill on';st.textContent='Actief';}
+  if(s.lastRun){
+    const days=s.start?Math.max(0,(s.lastRun-s.start.t)/86400):0;
+    $('meta').textContent=`Laatste check: ${when(s.lastRun)} · volgende rond ${when(s.lastRun+14400)} · ${s.runs||0} checks · dag ${Math.floor(days)+1} van de proef`;
+  }
+  if(lastEq){
+    const a=lastEq[1], b=lastEq[2]??start;
+    $('vAgent').textContent=eur0(a);
+    $('dAgent').innerHTML=`<span class="${cls(a-start)}">${pct((a/start-1)*100)} (${eur(a-start)})</span>`;
+    $('vBtc').textContent=eur0(b);
+    $('dBtc').innerHTML=`<span class="${cls(b-start)}">${pct((b/start-1)*100)}</span>`;
+    const diff=a-b;
+    $('verdict').textContent = Math.abs(diff)<1
+      ? 'De agent doet het tot nu toe gelijk aan het mandje vasthouden.'
+      : `De agent doet het tot nu toe ${eur0(Math.abs(diff))} ${diff>0?'beter':'slechter'} dan het mandje vasthouden, en ${eur0(Math.abs(a-start))} ${a>=start?'beter':'slechter'} dan niets doen. Na minimaal 3 maanden zegt dit pas echt iets.`;
+  }
+  // posities
+  const prices=s.prices||{}; const lp=c=>{const a=prices[c]||[];return a.length?a[a.length-1][1]:null;};
+  const pos=s.positions||[];
+  $('pos').innerHTML = pos.length ? pos.map(p=>{
+    const now=lp(p.coin)||p.entry, val=p.qty*now, ch=(now/p.entry-1)*100;
+    return `<div class="posrow"><div><b>${nm(p.coin)}</b><span class="tag">${p.potje==='trend'?'trendvolgen':'terugveren'}</span></div><div class="r">${eur(val)}</div><div class="s">Gekocht ${when(p.entryT)} voor ${eur(p.inleg)}</div><div class="r s ${cls(ch)}">${pct(ch)}</div></div>`;
+  }).join('') + `<p class="empty">Vrij saldo: ${eur(s.cash??start)}</p>`
+  : `<p class="empty">Nu geen posities: de agent wacht op een goed moment. Vrij saldo: ${eur(s.cash??start)}.</p>`;
+  // log
+  const log=(s.log||[]).slice().reverse().slice(0,60);
+  if(log.length) $('log').innerHTML=log.map(l=>{
+    let m=esc(l.msg).replace(/^GEKOCHT/,'<span class="buy">Gekocht</span>').replace(/^VERKOCHT/,'<span class="sell">Verkocht</span>');
+    return `<li><time>${when(l.t)}</time><span>${m}</span></li>`;}).join('');
+  // trades
+  const tr=(s.trades||[]).slice().reverse();
+  const stt=s.stats||{};
+  if(tr.length){
+    $('stats').innerHTML=`<span>Transacties: <b>${tr.length}</b></span><span>Afgesloten met winst: <b>${stt.winst||0}</b></span><span>Met verlies: <b>${stt.verlies||0}</b></span><span>Totaal betaalde kosten: <b>${eur(stt.kosten||0)}</b></span>`;
+    $('tb').innerHTML=tr.map(t=>`<tr><td>${when(t.t)}</td><td>${(t.naam||nm(t.coin))}</td><td>${t.side==='koop'?'Koop':'Verkoop'}</td><td class="n">${eur(t.bedrag)}</td><td class="n ${t.resultaat!=null?cls(t.resultaat):''}">${t.resultaat!=null?eur(t.resultaat):'—'}</td><td class="why">${esc(t.reden)}</td></tr>`).join('');
+  }
+  drawChart(eq,start);
+}
+
+function drawChart(eq,start){
+  const svg=$('ch'),W=760,H=300,m={l:58,r:16,t:14,b:30},iw=W-m.l-m.r,ih=H-m.t-m.b;
+  if(eq.length<2){svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="14" fill="var(--muted)">De grafiek verschijnt na de tweede check.</text>`;return;}
+  const vals=eq.flatMap(e=>[e[1],e[2]??start]).concat([start]);
+  let lo=Math.min(...vals),hi=Math.max(...vals); const pad=Math.max(10,(hi-lo)*0.12); lo-=pad; hi+=pad;
+  const steps=[5,10,20,25,50,100,200,250,500]; const step=steps.find(s=>(hi-lo)/s<=5)||1000;
+  lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
+  const t0=eq[0][0],t1=eq[eq.length-1][0];
+  const x=t=>m.l+(t-t0)/Math.max(1,t1-t0)*iw, y=v=>m.t+ih-(v-lo)/(hi-lo)*ih;
+  let s='';
+  for(let v=lo;v<=hi+0.01;v+=step) s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)">€${v.toLocaleString('nl-NL')}</text>`;
+  const ticks=4; for(let i=0;i<=ticks;i++){const t=t0+(t1-t0)*i/ticks; s+=`<text x="${x(t)}" y="${H-8}" text-anchor="${i===0?'start':i===ticks?'end':'middle'}" font-size="12" fill="var(--muted)">${new Date(t*1000).toLocaleDateString('nl-NL',{timeZone:'Europe/Amsterdam',day:'numeric',month:'short'})}</text>`;}
+  s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(start)}" y2="${y(start)}" stroke="var(--muted)" stroke-dasharray="4 3"/>`;
+  const pb=eq.map(e=>`${x(e[0])},${y(e[2]??start)}`).join(' '), pa=eq.map(e=>`${x(e[0])},${y(e[1])}`).join(' ');
+  s+=`<polyline points="${pb}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-linejoin="round"/>`;
+  s+=`<polyline points="${pa}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>`;
+  const L=eq[eq.length-1];
+  s+=`<circle cx="${x(L[0])}" cy="${y(L[2]??start)}" r="4" fill="var(--s2)" stroke="var(--panel)" stroke-width="2"/><circle cx="${x(L[0])}" cy="${y(L[1])}" r="4" fill="var(--s1)" stroke="var(--panel)" stroke-width="2"/>`;
+  s+=`<line id="xh" y1="${m.t}" y2="${m.t+ih}" stroke="var(--muted)" stroke-dasharray="3 3" visibility="hidden"/><rect id="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/>`;
+  svg.innerHTML=s;
+  const tip=$('tip'),box=$('cb'),xh=svg.querySelector('#xh'),hit=svg.querySelector('#hit');
+  function mv(ev){
+    const r=svg.getBoundingClientRect(),sx=(ev.clientX-r.left)*W/r.width;
+    let best=eq[0]; for(const e of eq) if(Math.abs(x(e[0])-sx)<Math.abs(x(best[0])-sx)) best=e;
+    xh.setAttribute('x1',x(best[0]));xh.setAttribute('x2',x(best[0]));xh.setAttribute('visibility','visible');
+    tip.innerHTML=`<strong>${when(best[0])}</strong><div><span>Agent</span><span>${eur(best[1])}</span></div><div><span>Mandje vasthouden</span><span>${eur(best[2]??start)}</span></div>`;
+    tip.hidden=false; const px=x(best[0])/W*r.width;
+    tip.style.left=Math.min(box.clientWidth-tip.offsetWidth-4,Math.max(4,px+12))+'px'; tip.style.top='8px';
+  }
+  hit.addEventListener('pointermove',mv);hit.addEventListener('pointerdown',mv);
+  hit.addEventListener('pointerleave',()=>{tip.hidden=true;xh.setAttribute('visibility','hidden');});
+}
+
+drawChart([],1000);
+async function laad(){
+  try{
+    const r=await fetch('state.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error(r.status);
+    render(await r.json());
+  }catch(e){ $('meta').textContent='Kan de gegevens nu niet laden. Probeer het over een paar minuten opnieuw.'; }
+}
+laad(); setInterval(laad,5*60*1000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) laad(); });
+})();
+</script>
+
+</body>
+</html>
