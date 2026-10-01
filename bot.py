@@ -59,6 +59,10 @@ DEFAULT_PARAMS = {
     "veerInstapRsi": 30, "veerUitstapRsi": 55,
     "veerWinst": 0.04, "veerStop": 0.05, "veerMaxDagen": 7,
     "weekVerliesStop": 0.08,
+    # momentum-uitbraak (apart potje)
+    "momMaxPosities": 1, "momBudget": 150.0,
+    "momVolFactor": 3.0,       # 24-uurs handel minstens 3x het weekgemiddelde
+    "momStop": 0.08, "momTrailing": 0.10, "momMaxDagen": 14,
     "maxSprong": 0.25,
     "maxOuderdom": 1800,       # koers ouder dan 30 minuten = niet gebruiken
     "maxPunten": 60, "maxEquity": 1000, "maxTrades": 300, "maxLog": 150,
@@ -69,6 +73,8 @@ def eur(v):
     return ("-" if v < 0 else "") + "€" + s
 
 def naam(c): return NAMES.get(c, c)
+
+POTNAAM = {"trend": "trendvolgen", "terugveer": "terugveren", "momentum": "momentum-uitbraak"}
 
 def ema(vals, n):
     if len(vals) < n: return None
@@ -178,9 +184,13 @@ def run(state, tick, now, notes=()):
             msgs.append(f"{naam(c)}: koers wijkt te sterk af van de vorige check; genegeerd als mogelijke datafout.")
             continue
         series.append([now, float(f"{p:.6g}")]); del series[:-P["maxPunten"]]
+        vs = state.setdefault("vols", {}).setdefault(c, [])
+        vs.append(round(t["vol"])); del vs[:-P["maxPunten"]]
         last[c] = p; spreads[c] = t["spread"]
     for c in list(state["prices"]):
         if c not in volg: del state["prices"][c]
+    for c in list(state.get("vols", {})):
+        if c not in volg: del state["vols"][c]
 
     def price_of(c):
         s = state["prices"].get(c) or []
@@ -221,11 +231,13 @@ def run(state, tick, now, notes=()):
             rec["resultaat"] = round(pnl, 2)
             state["stats"]["gesloten"] += 1
             state["stats"]["winst" if pnl > 0 else "verlies"] += 1
+            sp = state.setdefault("statsPot", {}).setdefault(potje, {"gesloten": 0, "winst": 0, "resultaat": 0.0})
+            sp["gesloten"] += 1; sp["winst"] += pnl > 0; sp["resultaat"] = round(sp["resultaat"] + pnl, 2)
         state["trades"].append(rec); del state["trades"][:-P["maxTrades"]]
         return rec, kostpct
 
     # 5. Posities beheren, daarna kansen verzamelen
-    kansen, trend_cnt, inloop, geblokt = [], 0, 0, 0
+    kansen, momkansen, trend_cnt, inloop, geblokt = [], [], 0, 0, 0
     for c in sorted(volg):
         if c not in last: continue
         closes = [x[1] for x in state["prices"][c]]
@@ -236,7 +248,15 @@ def run(state, tick, now, notes=()):
         if pos:
             pos["piek"] = max(pos.get("piek", pos["entry"]), p)
             reden = None
-            if pos["potje"] == "trend":
+            if pos["potje"] == "momentum":
+                dagen = (now - pos["entryT"]) / 86400
+                if p <= pos["entry"] * (1 - P["momStop"]):
+                    reden = f"Stop: uitbraak mislukt, koers {int(P['momStop']*100)}% onder de instapprijs."
+                elif p <= pos["piek"] * (1 - P["momTrailing"]):
+                    reden = f"Winst/verlies vastgezet: koers {int(P['momTrailing']*100)}% onder het hoogste punt sinds aankoop."
+                elif dagen >= P["momMaxDagen"]:
+                    reden = f"Na {P['momMaxDagen']} dagen gesloten; de uitbraak is uitgewerkt."
+            elif pos["potje"] == "trend":
                 if p <= pos["entry"] * (1 - P["trendStop"]):
                     reden = f"Stop: koers meer dan {int(P['trendStop']*100)}% onder de instapprijs gezakt."
                 elif p <= pos["piek"] * (1 - P["trendTrailing"]):
@@ -270,6 +290,11 @@ def run(state, tick, now, notes=()):
         if now < state.get("cooldown", {}).get(c, 0): continue
         if spreads.get(c, 0) > P["maxSpread"] or p < max(closes[-42:]) * (1 - P["crashGrens"]):
             geblokt += 1; continue
+        vs = state.get("vols", {}).get(c, [])
+        if len(vs) >= 43 and len(closes) >= 43:
+            gem = sum(vs[-43:-1]) / 42
+            if gem > 0 and vs[-1] >= P["momVolFactor"] * gem and p > max(closes[-43:-1]):
+                momkansen.append((-vs[-1] / gem, c, f"Uitbraak: koers boven het weekhoogste en {vs[-1]/gem:.1f}x zoveel handel als normaal."))
         if trend_up and closes[-2] <= e_k[-2] and p > e_k[-1]:
             kansen.append((0, -(p / e_l[-1] - 1), c, "trend", "Trend omhoog en de koers veert net weer boven het korte gemiddelde uit."))
         elif r[-1] < P["veerInstapRsi"]:
@@ -279,17 +304,31 @@ def run(state, tick, now, notes=()):
     kansen.sort()
     overgeslagen = 0
     for _, _, c, potje, uitleg in kansen:
-        if state.get("paused") or len(state["positions"]) >= P["maxPosities"]:
+        if state.get("paused") or sum(x["potje"] != "momentum" for x in state["positions"]) >= P["maxPosities"]:
             overgeslagen += 1; continue
         kp = P["kosten"] + spreads.get(c, 0) / 2
-        budget = min(state["cash"] / (1 + kp), equity() / P["maxPosities"])
+        budget = min(state["cash"] / (1 + kp), equity() / (P["maxPosities"] + P["momMaxPosities"]))
         if budget < 25:
             overgeslagen += 1; continue
         p = last[c]
         rec, _ = trade(c, "koop", budget / p, p, potje, uitleg)
         state["positions"].append({"coin": c, "potje": potje, "qty": budget / p, "entry": p, "entryT": now,
                                    "piek": p, "inleg": round(budget * (1 + kp), 2)})
-        msgs.append(f"GEKOCHT {naam(c)} voor {eur(rec['bedrag'])} ({'trendvolgen' if potje=='trend' else 'terugveren'}). {uitleg}")
+        msgs.append(f"GEKOCHT {naam(c)} voor {eur(rec['bedrag'])} ({POTNAAM[potje]}). {uitleg}")
+    momkansen.sort()
+    for _, c, uitleg in momkansen:
+        if c in {x["coin"] for x in state["positions"]}: continue
+        if state.get("paused") or sum(x["potje"] == "momentum" for x in state["positions"]) >= P["momMaxPosities"]:
+            overgeslagen += 1; continue
+        kp = P["kosten"] + spreads.get(c, 0) / 2
+        budget = min(state["cash"] / (1 + kp), P["momBudget"])
+        if budget < 25:
+            overgeslagen += 1; continue
+        p = last[c]
+        rec, _ = trade(c, "koop", budget / p, p, "momentum", uitleg)
+        state["positions"].append({"coin": c, "potje": "momentum", "qty": budget / p, "entry": p, "entryT": now,
+                                   "piek": p, "inleg": round(budget * (1 + kp), 2)})
+        msgs.append(f"GEKOCHT {naam(c)} voor {eur(rec['bedrag'])} (momentum-uitbraak). {uitleg}")
 
     # 7. Stand bijwerken
     eq = equity()

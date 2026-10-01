@@ -135,6 +135,7 @@ summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   <section class="card">
     <h2>Transacties</h2>
     <div class="stats" id="stats"><span>Nog geen transacties.</span></div>
+    <div class="stats" id="pots" style="margin-top:8px"></div>
     <div class="tw" style="margin-top:12px"><table><thead><tr><th>Moment</th><th>Munt</th><th>Actie</th><th class="n">Bedrag</th><th class="n">Resultaat</th><th>Reden</th></tr></thead><tbody id="tb"></tbody></table></div>
   </section>
 
@@ -145,6 +146,7 @@ summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <div class="rules">
         <p><strong>Trendvolgen.</strong> De koers zit in een stijgende lijn (het gemiddelde van de laatste ruim 2,5 dag ligt boven dat van de laatste bijna 7 dagen) en veert net weer omhoog na een kleine dip.</p>
         <p><strong>Terugveren.</strong> De koers is in korte tijd ongewoon hard gezakt. De agent koopt in de verwachting dat een deel van die daling herstelt.</p>
+        <p><strong>Momentum-uitbraak (apart potje).</strong> De koers breekt boven het hoogste punt van de afgelopen week uit, terwijl er minstens 3 keer zoveel gehandeld wordt als normaal. Hooguit één zo'n positie tegelijk, van maximaal €150.</p>
         <p>Zijn er meer kansen dan plekken, dan kiest hij de sterkste. Per munt hooguit één positie, maximaal vier tegelijk, elk rond een kwart van de totale waarde. Na een stopverlies wacht hij 24 uur voordat hij die munt opnieuw koopt.</p>
       </div>
     </details>
@@ -161,6 +163,7 @@ summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <summary>Wanneer verkoopt hij?</summary>
       <div class="rules">
         <p><strong>Bij trendvolgen:</strong> als de stijgende lijn voorbij is, als de koers 6% onder de aankoopprijs zakt, of als de koers 7% daalt vanaf het hoogste punt sinds aankoop.</p>
+        <p><strong>Bij momentum-uitbraak:</strong> bij 8% verlies, als de koers 10% daalt vanaf het hoogste punt sinds aankoop, of na 14 dagen.</p>
         <p><strong>Bij terugveren:</strong> bij 4% winst, bij 5% verlies, als de koers weer normaal is, of na 7 dagen zonder herstel.</p>
       </div>
     </details>
@@ -218,7 +221,7 @@ function render(s){
   const pos=s.positions||[];
   $('pos').innerHTML = pos.length ? pos.map(p=>{
     const now=lp(p.coin)||p.entry, val=p.qty*now, ch=(now/p.entry-1)*100;
-    return `<div class="posrow"><div><b>${nm(p.coin)}</b><span class="tag">${p.potje==='trend'?'trendvolgen':'terugveren'}</span></div><div class="r">${eur(val)}</div><div class="s">Gekocht ${when(p.entryT)} voor ${eur(p.inleg)}</div><div class="r s ${cls(ch)}">${pct(ch)}</div></div>`;
+    return `<div class="posrow"><div><b>${nm(p.coin)}</b><span class="tag">${({trend:'trendvolgen',terugveer:'terugveren',momentum:'momentum'})[p.potje]||p.potje}</span></div><div class="r">${eur(val)}</div><div class="s">Gekocht ${when(p.entryT)} voor ${eur(p.inleg)}</div><div class="r s ${cls(ch)}">${pct(ch)}</div></div>`;
   }).join('') + `<p class="empty">Vrij saldo: ${eur(s.cash??start)}</p>`
   : `<p class="empty">Nu geen posities: de agent wacht op een goed moment. Vrij saldo: ${eur(s.cash??start)}.</p>`;
   // log
@@ -233,6 +236,8 @@ function render(s){
     $('stats').innerHTML=`<span>Transacties: <b>${tr.length}</b></span><span>Afgesloten met winst: <b>${stt.winst||0}</b></span><span>Met verlies: <b>${stt.verlies||0}</b></span><span>Totaal betaalde kosten: <b>${eur(stt.kosten||0)}</b></span>`;
     $('tb').innerHTML=tr.map(t=>`<tr><td>${when(t.t)}</td><td>${(t.naam||nm(t.coin))}</td><td>${t.side==='koop'?'Koop':'Verkoop'}</td><td class="n">${eur(t.bedrag)}</td><td class="n ${t.resultaat!=null?cls(t.resultaat):''}">${t.resultaat!=null?eur(t.resultaat):'—'}</td><td class="why">${esc(t.reden)}</td></tr>`).join('');
   }
+  const sp=s.statsPot||{}; const PN={trend:'Trendvolgen',terugveer:'Terugveren',momentum:'Momentum-uitbraak'};
+  $('pots').innerHTML=Object.keys(PN).filter(k=>sp[k]).map(k=>`<span>${PN[k]}: <b>${sp[k].gesloten}</b> afgesloten, <b>${sp[k].winst}</b> met winst, resultaat <b class="${cls(sp[k].resultaat)}">${eur(sp[k].resultaat)}</b></span>`).join('');
   drawChart(eq,start);
 }
 
