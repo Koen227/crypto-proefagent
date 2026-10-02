@@ -1,0 +1,118 @@
+{
+ "bijgewerkt": "2026-10-02 22:02 UTC",
+ "koersdatum": "2026-10-02",
+ "start": "2026-10-02",
+ "start_kapitaal": 10000.0,
+ "waarde": 9990.05,
+ "wereld": 10000.0,
+ "kas": 40.05,
+ "kosten_totaal": 9.95,
+ "posities": [
+  {
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "waarde": 3316.67,
+   "aandeel": 33.2
+  },
+  {
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "waarde": 3316.67,
+   "aandeel": 33.2
+  },
+  {
+   "ticker": "IUES.L",
+   "naam": "VS Energie",
+   "waarde": 3316.67,
+   "aandeel": 33.2
+  }
+ ],
+ "historie": [
+  {
+   "datum": "2026-10-02",
+   "waarde": 9990.05,
+   "wereld": 10000.0
+  }
+ ],
+ "transacties": [
+  {
+   "datum": "2026-10-02",
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 74.16,
+   "kosten": 3.32
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUES.L",
+   "naam": "VS Energie",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 11.8055,
+   "kosten": 3.32
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 48.5634,
+   "kosten": 3.32
+  }
+ ],
+ "signaal": {
+  "datum": "2026-10-02",
+  "scores": {
+   "IUIT.L": 24.99,
+   "IUES.L": 17.68,
+   "IJPA.AS": 15.85,
+   "IUHC.L": 15.02,
+   "EUNM.DE": 14.44,
+   "EXSA.DE": 6.12,
+   "IUCM.L": 5.71,
+   "IUFS.L": 3.26,
+   "IUIS.L": 2.9,
+   "IUMS.L": 2.85,
+   "IUCS.L": 2.72,
+   "4GLD.DE": 0.79,
+   "IUCD.L": -1.6,
+   "EUNH.DE": -3.1,
+   "IUUS.L": -7.75
+  },
+  "geldmarkt": 0.98,
+  "gekozen": {
+   "IUIT.L": 0.3333333333333333,
+   "IUES.L": 0.3333333333333333,
+   "IJPA.AS": 0.3333333333333333
+  }
+ },
+ "namen": {
+  "SXR8.DE": "VS (S&P 500)",
+  "EQQQ.DE": "Nasdaq-100",
+  "EXSA.DE": "Europa (Stoxx 600)",
+  "EUNM.DE": "Opkomende markten",
+  "IJPA.AS": "Japan",
+  "4GLD.DE": "Goud",
+  "EUNH.DE": "Euro-staatsobligaties",
+  "IUIT.L": "VS Technologie",
+  "IUHC.L": "VS Gezondheidszorg",
+  "IUFS.L": "VS Financi\u00ebel",
+  "IUES.L": "VS Energie",
+  "IUCD.L": "VS Luxe consumptie",
+  "IUCS.L": "VS Basisconsumptie",
+  "IUIS.L": "VS Industrie",
+  "IUUS.L": "VS Nutsbedrijven",
+  "IUMS.L": "VS Grondstoffen",
+  "IUCM.L": "VS Communicatie",
+  "XEON.DE": "Geldmarkt (veilig)",
+  "IWDA.AS": "Wereld-ETF (vergelijking)"
+ },
+ "regels": {
+  "top": 3,
+  "score": "gemiddelde rendement 1, 3, 6 en 12 maanden",
+  "filter": "alleen kopen als sterker dan de geldmarkt"
+ }
+}

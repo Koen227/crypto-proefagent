@@ -1,0 +1,74 @@
+{
+ "start": "2026-10-02",
+ "kas": 40.05000000000018,
+ "posities": {
+  "IJPA.AS": 44.72311897095083,
+  "IUES.L": 280.9423244705248,
+  "IUIT.L": 68.29565770165098
+ },
+ "maand": "2026-10",
+ "historie": [
+  {
+   "datum": "2026-10-02",
+   "waarde": 9990.05,
+   "wereld": 10000.0
+  }
+ ],
+ "transacties": [
+  {
+   "datum": "2026-10-02",
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 74.16,
+   "kosten": 3.32
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUES.L",
+   "naam": "VS Energie",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 11.8055,
+   "kosten": 3.32
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "actie": "koop",
+   "bedrag": 3316.67,
+   "koers": 48.5634,
+   "kosten": 3.32
+  }
+ ],
+ "bench_eenheden": 77.63372556117896,
+ "kosten_totaal": 9.95,
+ "laatste_signaal": {
+  "datum": "2026-10-02",
+  "scores": {
+   "IUIT.L": 24.99,
+   "IUES.L": 17.68,
+   "IJPA.AS": 15.85,
+   "IUHC.L": 15.02,
+   "EUNM.DE": 14.44,
+   "EXSA.DE": 6.12,
+   "IUCM.L": 5.71,
+   "IUFS.L": 3.26,
+   "IUIS.L": 2.9,
+   "IUMS.L": 2.85,
+   "IUCS.L": 2.72,
+   "4GLD.DE": 0.79,
+   "IUCD.L": -1.6,
+   "EUNH.DE": -3.1,
+   "IUUS.L": -7.75
+  },
+  "geldmarkt": 0.98,
+  "gekozen": {
+   "IUIT.L": 0.3333333333333333,
+   "IUES.L": 0.3333333333333333,
+   "IJPA.AS": 0.3333333333333333
+  }
+ }
+}
