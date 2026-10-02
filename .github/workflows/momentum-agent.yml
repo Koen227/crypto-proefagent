@@ -1,0 +1,39 @@
+name: Momentum Proefagent
+
+on:
+  schedule:
+    - cron: "47 17 * * 1-5"   # elke werkdag na sluiting van de beurzen (19:47 Nederlandse zomertijd)
+  push:
+    paths:
+      - "momentum/agent.py"
+      - "momentum/strategie.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proefagent
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance pandas
+      - run: python momentum/agent.py
+      - name: Stand opslaan
+        run: |
+          git config user.name "proefagent"
+          git config user.email "proefagent@users.noreply.github.com"
+          git add momentum/state.json docs/momentum.json
+          if git diff --cached --quiet; then echo "Geen wijzigingen."; else
+            git commit -m "Momentum $(date -u +'%Y-%m-%d')"
+            git pull --rebase
+            git push
+          fi

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Momentum Proefagent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#f2f4f3; --panel:#ffffff; --line:#d7dddb; --fg:#121816; --fg2:#47524e; --muted:#76817d;
+  --accent:#0f6b5c; --accent-soft:#e0efeb; --s1:#2a78d6; --s2:#eb6834;
+  --up:#16794a; --down:#c23b32; --warn:#9a6200;
+  --display:"Unbounded","Arial Black",Arial,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101413; --panel:#181e1c; --line:#2b3431; --fg:#edf2f0; --fg2:#b3bfbb; --muted:#85918d;
+  --accent:#5cc3ad; --accent-soft:#1a2f2a; --s1:#3987e5; --s2:#d95926;
+  --up:#4cc47f; --down:#f06a60; --warn:#e3a54a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101413; --panel:#181e1c; --line:#2b3431; --fg:#edf2f0; --fg2:#b3bfbb; --muted:#85918d;
+  --accent:#5cc3ad; --accent-soft:#1a2f2a; --s1:#3987e5; --s2:#d95926;
+  --up:#4cc47f; --down:#f06a60; --warn:#e3a54a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:20px}
+header{display:grid;gap:10px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(22px,4vw,30px);margin:0;letter-spacing:-.01em}
+.lead{color:var(--fg2);margin:0;max-width:68ch}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:99px;color:var(--up);background:color-mix(in srgb,var(--up) 13%,transparent)}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.meta{font-size:13px;color:var(--muted)} .meta a{color:var(--accent)}
+.stand{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:12px}
+@media (max-width:680px){.stand{grid-template-columns:minmax(0,1fr)}}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.tile .l{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.tile .v{font-family:var(--display);font-weight:500;font-size:28px;line-height:1.15;margin-top:6px;font-variant-numeric:tabular-nums}
+.tile.main{border-color:var(--accent)} .tile.main .v{font-size:34px}
+.tile .d{font-size:14px;margin-top:4px;font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+.verdict{background:var(--accent-soft);border-radius:12px;padding:12px 16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h2{font-family:var(--display);font-weight:500;font-size:17px;margin:0 0 4px}
+.card .sub{color:var(--fg2);font-size:14px;margin:0 0 12px;max-width:72ch}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--fg2);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:3px;border-radius:2px;display:inline-block}
+.sw.dash{background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)}
+svg{display:block;width:100%;height:auto}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+.rank{display:grid;gap:6px}
+.rk{display:grid;grid-template-columns:minmax(0,11rem) 1fr 4.2rem;gap:10px;align-items:center;font-size:14px}
+.rk .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk .bar{height:10px;border-radius:5px;background:var(--line);position:relative;overflow:hidden}
+.rk .bar i{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--muted)}
+.rk.kies .nm{font-weight:600} .rk.kies .bar i{background:var(--accent)}
+.rk .sc{text-align:right;font-variant-numeric:tabular-nums}
+.rk.safe{border-top:1px dashed var(--line);padding-top:6px;color:var(--fg2)}
+.bt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:6px}
+@media (max-width:620px){.bt{grid-template-columns:minmax(0,1fr)}}
+.bt div{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.bt b{display:block;font-family:var(--display);font-weight:500;font-size:20px}
+.bt span{font-size:13px;color:var(--fg2)}
+.rules{display:grid;gap:8px;color:var(--fg2);font-size:14.5px;max-width:74ch;margin:0;padding-left:18px}
+.empty{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top"><h1>Momentum Proefagent</h1><span class="pill">Proef met fictief geld</span></div>
+    <p class="lead">Belegt €10.000 nepgeld in ETF's. Eén keer per maand kiest de agent de 3 sterkste uit 16 ETF's (Amerikaanse sectoren, regio's, goud en obligaties). Is een ETF zwakker dan de geldmarkt, dan gaat dat deel naar de geldmarkt. Elke werkdag wordt de waarde bijgewerkt. Er gaat geen echt geld om.</p>
+    <div class="meta" id="meta">Laden…</div>
+  </header>
+
+  <section class="stand">
+    <div class="tile main"><div class="l">Waarde agent</div><div class="v" id="w">–</div><div class="d" id="wd"></div></div>
+    <div class="tile"><div class="l">Wereld-ETF vasthouden</div><div class="v" id="b">–</div><div class="d" id="bd"></div></div>
+    <div class="tile"><div class="l">Verschil</div><div class="v" id="x">–</div><div class="d" id="xd"></div></div>
+  </section>
+  <div class="verdict" id="verdict">De eerste maanden zeggen weinig; pas na een jaar of langer is het verschil met de wereld-ETF betekenisvol.</div>
+
+  <section class="card">
+    <h2>Verloop</h2>
+    <p class="sub">Waarde van de agent tegenover hetzelfde bedrag in de wereld-ETF (IWDA) kopen en laten staan.</p>
+    <div class="legend"><span><i class="sw" style="background:var(--s1)"></i>Agent</span><span><i class="sw" style="background:var(--s2)"></i>Wereld-ETF</span><span><i class="sw dash"></i>Start €10.000</span></div>
+    <svg id="ch" viewBox="0 0 760 280" role="img" aria-label="Waarde van de agent en de wereld-ETF per dag"></svg>
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <h2>Bezit nu</h2>
+      <div class="scroll"><table><thead><tr><th>ETF</th><th class="n">Waarde</th><th class="n">Deel</th></tr></thead><tbody id="pos"></tbody></table></div>
+    </section>
+    <section class="card">
+      <h2>Laatste maandkeuze</h2>
+      <p class="sub" id="sigsub">Score = gemiddeld rendement over 1, 3, 6 en 12 maanden.</p>
+      <div class="rank" id="rank"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Transacties</h2>
+    <div class="scroll"><table><thead><tr><th>Datum</th><th>Actie</th><th>ETF</th><th class="n">Bedrag</th><th class="n">Kosten</th></tr></thead><tbody id="tx"></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Backtest vooraf (oktober 2018 – oktober 2026)</h2>
+    <p class="sub">Dezelfde regels teruggerekend over de afgelopen 8 jaar, met kosten van Interactive Brokers. Geen garantie voor later; 8 jaar is kort.</p>
+    <div class="bt">
+      <div><b>14,9% / jaar</b><span>Agent (wereld-ETF 13,7%)</span></div>
+      <div><b>−16,5%</b><span>Grootste daling (wereld-ETF −18,6%)</span></div>
+      <div><b>+14,5% in 2022</b><span>Wereld-ETF dat jaar −13,5%</span></div>
+    </div>
+    <p class="sub" style="margin-top:12px">Maar ook: in 2019, 2023 en 2025 bleef de agent duidelijk achter. Met alleen regio's (zonder sectoren) was het resultaat sinds 2012 niet beter dan de wereld-ETF.</p>
+  </section>
+
+  <section class="card">
+    <h2>Regels</h2>
+    <ul class="rules">
+      <li>Herverdelen op de eerste werkdag van elke maand, op basis van de slotkoersen van de vorige maand.</li>
+      <li>Score per ETF: het gemiddelde rendement over 1, 3, 6 en 12 maanden. De 3 hoogste worden gekocht, elk een derde.</li>
+      <li>Trendfilter: ligt de score onder die van de geldmarkt-ETF, dan gaat dat derde naar de geldmarkt.</li>
+      <li>Kosten: 0,1% per order, minimaal €3. Kleine afwijkingen (onder 5%) worden niet bijgesteld.</li>
+      <li>Alle bedragen in euro's; Amerikaanse sector-ETF's worden omgerekend.</li>
+    </ul>
+  </section>
+</div>
+<script>
+const eur=v=>"€"+v.toLocaleString("nl-NL",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=v=>(v>=0?"+":"")+v.toLocaleString("nl-NL",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+const cls=v=>v>=0?"up":"down";
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+fetch("momentum.json?"+Date.now()).then(r=>r.json()).then(s=>{
+  const k=s.start_kapitaal, rw=(s.waarde/k-1)*100, rb=(s.wereld/k-1)*100;
+  document.getElementById("meta").innerHTML=`Gestart ${s.start} · koersen van ${s.koersdatum} · bijgewerkt ${s.bijgewerkt} · <a href="./">naar de Crypto Proefagent</a>`;
+  w.textContent=eur(s.waarde); wd.textContent=pct(rw)+" sinds start"; wd.className="d "+cls(rw);
+  b.textContent=eur(s.wereld); bd.textContent=pct(rb)+" sinds start"; bd.className="d "+cls(rb);
+  const dx=s.waarde-s.wereld; x.textContent=(dx>=0?"+":"−")+eur(Math.abs(dx)).slice(0); x.className="v "+cls(dx);
+  xd.textContent=`Kosten tot nu toe ${eur(s.kosten_totaal)}`;
+  const dagen=s.historie.length;
+  verdict.textContent = dagen<120 ? `Nog maar ${dagen} handelsdag${dagen==1?"":"en"} gemeten. De eerste maanden zeggen weinig; pas na een jaar of langer is het verschil met de wereld-ETF betekenisvol.`
+    : (dx>=0?`De agent ligt ${eur(dx)} vóór op de wereld-ETF.`:`De agent ligt ${eur(-dx)} achter op de wereld-ETF.`);
+  // posities
+  pos.innerHTML=s.posities.map(p=>`<tr><td>${p.naam} <span class="meta">${p.ticker}</span></td><td class="n">${eur(p.waarde)}</td><td class="n">${p.aandeel.toLocaleString("nl-NL")}%</td></tr>`).join("")
+    + (Math.abs(s.kas)>=1?`<tr><td>Kas</td><td class="n">${eur(s.kas)}</td><td class="n"></td></tr>`:"");
+  // ranglijst
+  if(s.signaal){
+    sigsub.textContent=`Gekozen op ${s.signaal.datum}. Score = gemiddeld rendement over 1, 3, 6 en 12 maanden.`;
+    const sc=Object.entries(s.signaal.scores), mx=Math.max(...sc.map(e=>Math.abs(e[1])),Math.abs(s.signaal.geldmarkt),1);
+    const gek=s.signaal.gekozen;
+    rank.innerHTML=sc.map(([t,v])=>`<div class="rk ${gek[t]?"kies":""}"><span class="nm" title="${s.namen[t]||t}">${s.namen[t]||t}</span><span class="bar"><i style="width:${Math.max(0,v)/mx*100}%"></i></span><span class="sc ${cls(v)}">${pct(v)}</span></div>`).join("")
+      + `<div class="rk safe"><span class="nm">Geldmarkt (drempel)</span><span></span><span class="sc">${pct(s.signaal.geldmarkt)}</span></div>`;
+  }
+  tx.innerHTML=s.transacties.slice().reverse().map(t=>`<tr><td>${t.datum}</td><td class="${t.actie=="koop"?"up":"down"}">${t.actie}</td><td>${t.naam}</td><td class="n">${eur(t.bedrag)}</td><td class="n">${eur(t.kosten)}</td></tr>`).join("")||`<tr><td colspan="5" class="empty">Nog geen transacties.</td></tr>`;
+  // grafiek
+  const H=s.historie, W=760, Hh=280, L=58, R=12, T=12, B=28;
+  const vals=H.flatMap(h=>[h.waarde,h.wereld]).concat([k]);
+  let lo=Math.min(...vals), hi=Math.max(...vals); const pad=Math.max((hi-lo)*0.1,k*0.01); lo-=pad; hi+=pad;
+  const X=i=>L+(H.length<2?(W-L-R)/2:i*(W-L-R)/(H.length-1)), Y=v=>T+(hi-v)/(hi-lo)*(Hh-T-B);
+  const line=(f,c)=>H.length<2?`<circle cx="${X(0)}" cy="${Y(H[0][f])}" r="4" fill="${c}"/>`:`<polyline fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round" points="${H.map((h,i)=>X(i)+","+Y(h[f])).join(" ")}"/>`;
+  let g=""; for(let j=0;j<=4;j++){const v=lo+(hi-lo)*j/4; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${css("--line")}"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="${css("--muted")}">€${Math.round(v).toLocaleString("nl-NL")}</text>`;}
+  g+=`<line x1="${L}" x2="${W-R}" y1="${Y(k)}" y2="${Y(k)}" stroke="${css("--muted")}" stroke-dasharray="4 3"/>`;
+  g+=`<text x="${L}" y="${Hh-8}" font-size="11" fill="${css("--muted")}">${H[0].datum}</text><text x="${W-R}" y="${Hh-8}" text-anchor="end" font-size="11" fill="${css("--muted")}">${H[H.length-1].datum}</text>`;
+  ch.innerHTML=g+line("wereld",css("--s2"))+line("waarde",css("--s1"));
+}).catch(()=>{meta.textContent="Nog geen gegevens. De agent draait elke werkdag rond 19:45 uur."});
+</script>
+</body>
+</html>
