@@ -1,16 +1,17 @@
 {
  "start": "2026-10-02",
- "kas": 40.05000000000018,
+ "kas": 37.95025000000078,
  "posities": {
-  "IJPA.AS": 44.72311897095083,
-  "IUES.L": 280.9423244705248,
-  "IUIT.L": 68.29565770165098
+  "IJPA.AS": 33.50896460068105,
+  "IUES.L": 210.49709014325748,
+  "IUIT.L": 51.17077764167837,
+  "IUHC.L": 208.30277411802703
  },
- "maand": null,
+ "maand": "2026-10",
  "historie": [
   {
    "datum": "2026-10-02",
-   "waarde": 9990.05,
+   "waarde": 9978.05,
    "wereld": 10000.0
   }
  ],
@@ -41,10 +42,46 @@
    "bedrag": 3316.67,
    "koers": 48.5634,
    "kosten": 3.32
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "actie": "verkoop",
+   "bedrag": 831.64,
+   "koers": 48.5634,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "actie": "verkoop",
+   "bedrag": 831.64,
+   "koers": 74.16,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUES.L",
+   "naam": "VS Energie",
+   "actie": "verkoop",
+   "bedrag": 831.64,
+   "koers": 11.8055,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-10-02",
+   "ticker": "IUHC.L",
+   "naam": "VS Gezondheidszorg",
+   "actie": "koop",
+   "bedrag": 2485.02,
+   "koers": 11.9299,
+   "kosten": 3.0
   }
  ],
  "bench_eenheden": 77.63372556117896,
- "kosten_totaal": 9.95,
+ "kosten_totaal": 21.95,
  "laatste_signaal": {
   "datum": "2026-10-02",
   "scores": {
@@ -66,9 +103,10 @@
   },
   "geldmarkt": 0.98,
   "gekozen": {
-   "IUIT.L": 0.3333333333333333,
-   "IUES.L": 0.3333333333333333,
-   "IJPA.AS": 0.3333333333333333
+   "IUIT.L": 0.25,
+   "IUES.L": 0.25,
+   "IJPA.AS": 0.25,
+   "IUHC.L": 0.25
   }
  }
 }
