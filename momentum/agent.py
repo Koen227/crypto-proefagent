@@ -5,7 +5,7 @@ Draait elke werkdag na sluiting van de Europese beurzen (via GitHub):
  - haalt de slotkoersen op (Yahoo Finance, openbaar, geen account nodig);
  - waardeert de fictieve posities in euro's;
  - één keer per maand (eerste run in een nieuwe maand): scores berekenen op de slotkoersen
-   van de vorige maand en herverdelen over de 3 sterkste ETF's (trendfilter: zwakker dan
+   van de vorige maand en herverdelen over de 4 sterkste ETF's (trendfilter: zwakker dan
    de geldmarkt -> dat deel naar de geldmarkt);
  - houdt een vergelijking bij: hetzelfde bedrag in de wereld-ETF (IWDA) kopen en vasthouden.
 
@@ -25,7 +25,7 @@ import strategie as S  # noqa: E402
 STATE = os.path.join(HIER, "state.json")
 STAND = os.path.join(HIER, "..", "docs", "momentum.json")
 START_KAPITAAL = 10000.0
-TOP = 3
+TOP = 4
 REGEL = "mix"
 KOSTEN_PCT = 0.001       # commissie + bied-laatverschil (Interactive Brokers)
 MIN_KOSTEN = 3.0         # minimum per order
