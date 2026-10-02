@@ -20,8 +20,17 @@ SECTOR = {"IUIT.L": "VS Technologie", "IUHC.L": "VS Gezondheidszorg", "IUFS.L": 
 VEILIG = "XEON.DE"
 # Gekozen opzet voor de proefagent (zie README): Amerikaanse sectoren + regio's buiten de VS + goud + obligaties
 ALLES = {**SECTOR, **{k: v for k, v in REGIO.items() if k not in ("SXR8.DE", "EQQQ.DE")}}
-NAMEN = {**REGIO, **SECTOR, VEILIG: "Geldmarkt (veilig)", "IWDA.AS": "Wereld-ETF (vergelijking)"}
-USD = {t for t in SECTOR}  # noteren in dollars op Londen
+# Uitbreiding: live UCITS-ETF (in euro's) -> (naam, Amerikaanse proxy met langere historie, alleen voor backtest)
+UITBREIDING = {
+    "XCS5.DE": ("India", "INDA"), "XCS6.DE": ("China", "MCHI"), "4BRZ.DE": ("Brazilië", "EWZ"),
+    "NUKL.DE": ("Kernenergie & uranium", "NLR"), "IQQE.DE": ("Olie & gas (wereld)", None),
+    "IQQH.DE": ("Schone energie (wereld)", None), "XAD6.DE": ("Zilver", "SLV"), "EXXY.DE": ("Grondstoffen breed", None),
+    "G2X.DE": ("Goudmijnen", "GDX"), "IQQ6.DE": ("Vastgoed (wereld)", None), "DFEN.DE": ("Defensie", "ITA"),
+    "VVSM.DE": ("Halfgeleiders", "SOXX"),
+}
+PROXY = {t: p for t, (n, p) in UITBREIDING.items() if p}
+NAMEN = {**REGIO, **SECTOR, **{t: n for t, (n, p) in UITBREIDING.items()}, VEILIG: "Geldmarkt (veilig)", "IWDA.AS": "Wereld-ETF (vergelijking)"}
+USD = {t for t in SECTOR} | {"INDA", "MCHI", "EWZ", "NLR", "SLV", "GDX", "ITA", "SOXX"}  # dollarkoersen
 
 
 def schoon(s):
@@ -39,14 +48,26 @@ def bestand(t):
     return os.path.join(DATA, t.replace(".", "_").replace("=", "_") + ".csv")
 
 
-def laad(tickers):
+def _reeks(t, eurusd):
+    s = pd.read_csv(bestand(t), parse_dates=["Date"]).set_index("Date")["Adj Close"].dropna()
+    s = schoon(s[s > 0])
+    if t in USD:  # omrekenen naar euro
+        s = s / eurusd.reindex(s.index).ffill()
+    return s
+
+
+def laad(tickers, proxy=True):
+    """proxy=True: vóór de startdatum van een UCITS-ETF wordt de Amerikaanse tegenhanger gebruikt (alleen backtest)."""
     eurusd = pd.read_csv(bestand("EURUSD=X"), parse_dates=["Date"]).set_index("Date")["Close"]
     out = {}
     for t in tickers:
-        s = pd.read_csv(bestand(t), parse_dates=["Date"]).set_index("Date")["Adj Close"].dropna()
-        s = schoon(s[s > 0])
-        if t in USD:  # omrekenen naar euro
-            s = s / eurusd.reindex(s.index).ffill()
+        s = _reeks(t, eurusd)
+        p = PROXY.get(t)
+        if proxy and p and os.path.exists(bestand(p)):
+            v = _reeks(p, eurusd)
+            v = v[v.index < s.index[0]]
+            if len(v):
+                s = pd.concat([v * s.iloc[0] / v.iloc[-1], s])
         out[t] = s
     df = pd.DataFrame(out).sort_index().ffill()
     return df
