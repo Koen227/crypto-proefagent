@@ -1,0 +1,37 @@
+name: Dividend backtest - data ophalen
+
+on:
+  push:
+    paths:
+      - "dividend-backtest/fetch.py"
+      - ".github/workflows/dividend-backtest.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proefagent
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance pandas
+      - run: python dividend-backtest/fetch.py
+      - name: Data opslaan
+        run: |
+          git config user.name "proefagent"
+          git config user.email "proefagent@users.noreply.github.com"
+          git add dividend-backtest/data
+          if git diff --cached --quiet; then echo "Geen data."; else
+            git commit -m "Dividend backtest: koersdata opgehaald"
+            git pull --rebase
+            git push
+          fi
