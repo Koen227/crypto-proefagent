@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "momentum/fetch.py"
+      - "momentum/fetch2.py"
       - ".github/workflows/momentum-data.yml"
   workflow_dispatch: {}
 
@@ -24,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install yfinance pandas
-      - run: python momentum/fetch.py
+      - run: python momentum/fetch2.py
       - name: Data opslaan
         run: |
           git config user.name "proefagent"
