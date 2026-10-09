@@ -1,36 +1,36 @@
 {
- "bijgewerkt": "2026-10-08 18:00 UTC",
- "koersdatum": "2026-10-08",
+ "bijgewerkt": "2026-10-09 18:00 UTC",
+ "koersdatum": "2026-10-09",
  "start": "2026-10-02",
  "start_kapitaal": 10000.0,
- "waarde": 10135.81,
- "wereld": 10168.47,
+ "waarde": 10222.88,
+ "wereld": 10222.03,
  "kas": 37.95,
  "kosten_totaal": 21.95,
  "posities": [
   {
    "ticker": "IUES.L",
    "naam": "VS Energie",
-   "waarde": 2600.59,
+   "waarde": 2629.46,
    "aandeel": 25.7
-  },
-  {
-   "ticker": "IUIT.L",
-   "naam": "VS Technologie",
-   "waarde": 2507.77,
-   "aandeel": 24.7
-  },
-  {
-   "ticker": "IJPA.AS",
-   "naam": "Japan",
-   "waarde": 2497.76,
-   "aandeel": 24.6
   },
   {
    "ticker": "IUHC.L",
    "naam": "VS Gezondheidszorg",
-   "waarde": 2491.75,
+   "waarde": 2555.55,
+   "aandeel": 25.0
+  },
+  {
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "waarde": 2516.19,
    "aandeel": 24.6
+  },
+  {
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "waarde": 2483.73,
+   "aandeel": 24.3
   }
  ],
  "historie": [
@@ -58,6 +58,11 @@
    "datum": "2026-10-08",
    "waarde": 10135.81,
    "wereld": 10168.47
+  },
+  {
+   "datum": "2026-10-09",
+   "waarde": 10222.88,
+   "wereld": 10222.03
   }
  ],
  "transacties": [
