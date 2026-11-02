@@ -1,13 +1,13 @@
 {
  "start": "2026-10-02",
- "kas": 37.95025000000078,
+ "kas": -366.54257876313477,
  "posities": {
-  "IJPA.AS": 33.50896460068105,
   "IUES.L": 210.49709014325748,
-  "IUIT.L": 51.17077764167837,
-  "IUHC.L": 208.30277411802703
+  "IUHC.L": 208.30277411802703,
+  "IUCS.L": 259.093882723365,
+  "IUMS.L": 238.10673220802204
  },
- "maand": "2026-10",
+ "maand": "2026-11",
  "historie": [
   {
    "datum": "2026-10-02",
@@ -113,6 +113,11 @@
    "datum": "2026-10-30",
    "waarde": 10331.65,
    "wereld": 10069.09
+  },
+  {
+   "datum": "2026-11-02",
+   "waarde": 10224.12,
+   "wereld": 10088.5
   }
  ],
  "transacties": [
@@ -178,35 +183,71 @@
    "bedrag": 2485.02,
    "koers": 11.9299,
    "kosten": 3.0
+  },
+  {
+   "datum": "2026-11-02",
+   "ticker": "IJPA.AS",
+   "naam": "Japan",
+   "actie": "verkoop",
+   "bedrag": 2420.69,
+   "koers": 72.24,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-11-02",
+   "ticker": "IUIT.L",
+   "naam": "VS Technologie",
+   "actie": "verkoop",
+   "bedrag": 2279.29,
+   "koers": 44.5428,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-11-02",
+   "ticker": "IUCS.L",
+   "naam": "VS Basisconsumptie",
+   "actie": "koop",
+   "bedrag": 2546.24,
+   "koers": 9.8275,
+   "kosten": 3.0
+  },
+  {
+   "datum": "2026-11-02",
+   "ticker": "IUMS.L",
+   "naam": "VS Grondstoffen",
+   "actie": "koop",
+   "bedrag": 2546.24,
+   "koers": 10.6937,
+   "kosten": 3.0
   }
  ],
  "bench_eenheden": 77.63372556117896,
- "kosten_totaal": 21.95,
+ "kosten_totaal": 33.95,
  "laatste_signaal": {
-  "datum": "2026-10-02",
+  "datum": "2026-11-02",
   "scores": {
-   "IUIT.L": 24.99,
-   "IUES.L": 17.68,
-   "IJPA.AS": 15.85,
-   "IUHC.L": 15.02,
-   "EUNM.DE": 14.44,
-   "EXSA.DE": 6.12,
-   "IUCM.L": 5.71,
-   "IUFS.L": 3.26,
-   "IUIS.L": 2.9,
-   "IUMS.L": 2.85,
-   "IUCS.L": 2.72,
-   "4GLD.DE": 0.79,
-   "IUCD.L": -1.6,
-   "EUNH.DE": -3.1,
-   "IUUS.L": -7.75
+   "IUES.L": 32.53,
+   "IUHC.L": 24.66,
+   "IUCS.L": 15.04,
+   "IUMS.L": 12.1,
+   "IUFS.L": 9.54,
+   "IUIT.L": 9.41,
+   "IJPA.AS": 7.83,
+   "EXSA.DE": 6.22,
+   "IUUS.L": 3.73,
+   "IUCD.L": 3.49,
+   "IUIS.L": 3.46,
+   "EUNM.DE": 2.55,
+   "EUNH.DE": -1.36,
+   "4GLD.DE": -3.81,
+   "IUCM.L": -8.21
   },
-  "geldmarkt": 0.98,
+  "geldmarkt": 1.0,
   "gekozen": {
-   "IUIT.L": 0.25,
    "IUES.L": 0.25,
-   "IJPA.AS": 0.25,
-   "IUHC.L": 0.25
+   "IUHC.L": 0.25,
+   "IUCS.L": 0.25,
+   "IUMS.L": 0.25
   }
  }
 }
