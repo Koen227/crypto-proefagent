@@ -1,0 +1,12 @@
+{
+ "_uitleg": "Pas dit bestand aan na een aan- of verkoop. aankoopwaarde = wat je in euro's betaalde (zoals DEGIRO het toont). tickers = Yahoo Finance-notering, eerste die werkt wordt gebruikt.",
+ "vrij_saldo": 7.63,
+ "gerealiseerd": 5102.47,
+ "posities": [
+  {"id": "lithium", "naam": "Global X Lithium & Battery Tech", "soort": "ETF · IE00BLCHJN13", "munt": "EUR", "aantal": 830, "gak": 13.502, "aankoopwaarde": 11206.66, "tickers": ["LI7U.DE", "LITU.MI"]},
+  {"id": "quantum", "naam": "VanEck Quantum Computing", "soort": "ETF · IE0007Y8Y157", "munt": "EUR", "aantal": 300, "gak": 18.894, "aankoopwaarde": 5668.20, "tickers": ["QUTM.DE", "QNTM.AS"]},
+  {"id": "semis", "naam": "iShares Global Semiconductors", "soort": "ETF · Euronext Amsterdam", "munt": "USD", "aantal": 390, "gak": 10.472, "aankoopwaarde": 3496.17, "tickers": ["SEMI.AS"]},
+  {"id": "drones", "naam": "WisdomTree AI Humanoids & Drones", "soort": "ETF · IE000LCKJ888", "munt": "EUR", "aantal": 353, "gak": 23.535, "aankoopwaarde": 8307.84, "tickers": ["PAIW.DE", "WPAI.MI", "WPAI.PA"]},
+  {"id": "taketwo", "naam": "Take-Two Interactive", "soort": "Aandeel · Nasdaq", "munt": "USD", "aantal": 20, "gak": 232.00, "aankoopwaarde": 4092.58, "tickers": ["TTWO"]}
+ ]
+}

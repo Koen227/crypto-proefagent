@@ -1,0 +1,39 @@
+name: Portefeuille koersen
+
+on:
+  schedule:
+    - cron: "35 16,21 * * 1-5"   # werkdagen 17:35 en 22:35 Nederlandse wintertijd (na sluiting Xetra en Nasdaq)
+  push:
+    paths:
+      - "portefeuille/**"
+      - ".github/workflows/portefeuille.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: proefagent
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance pandas
+      - run: python portefeuille/koersen.py
+      - name: Stand opslaan
+        run: |
+          git config user.name "proefagent"
+          git config user.email "proefagent@users.noreply.github.com"
+          git add docs/portefeuille.json
+          if git diff --cached --quiet; then echo "Geen wijzigingen."; else
+            git commit -m "Portefeuille $(date -u +'%Y-%m-%d %H:%M')"
+            git pull --rebase
+            git push
+          fi
