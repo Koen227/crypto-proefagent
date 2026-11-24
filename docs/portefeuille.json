@@ -1,13 +1,13 @@
 {
- "bijgewerkt": "2026-11-20T22:46+00:00",
- "eurusd": 1.09745,
- "eurusd_datum": "2026-11-20",
+ "bijgewerkt": "2026-11-24T03:00+00:00",
+ "eurusd": 1.09146,
+ "eurusd_datum": "2026-11-24",
  "vrij_saldo": 7.63,
  "gerealiseerd": 5102.47,
- "waarde": 26975.03,
+ "waarde": 27011.94,
  "aankoopwaarde": 32771.45,
- "ongerealiseerd": -5796.42,
- "vandaag": -1766.51,
+ "ongerealiseerd": -5759.51,
+ "vandaag": -1754.64,
  "niet_bijgewerkt": [],
  "posities": [
   {
@@ -55,10 +55,10 @@
    "koers": 14.17,
    "koersdatum": "2026-11-20",
    "vorige_slot": 15.994,
-   "waarde": 5035.56,
+   "waarde": 5063.2,
    "aankoopwaarde": 3496.17,
-   "resultaat": 1539.39,
-   "vandaag": -649.5,
+   "resultaat": 1567.03,
+   "vandaag": -622.12,
    "verouderd": false
   },
   {
@@ -86,13 +86,13 @@
    "ticker": "TTWO",
    "aantal": 20,
    "gak": 232.0,
-   "koers": 210.0,
-   "koersdatum": "2026-11-20",
-   "vorige_slot": 208.65,
-   "waarde": 3827.04,
+   "koers": 209.36,
+   "koersdatum": "2026-11-23",
+   "vorige_slot": 210.0,
+   "waarde": 3836.31,
    "aankoopwaarde": 4092.58,
-   "resultaat": -265.54,
-   "vandaag": 23.73,
+   "resultaat": -256.27,
+   "vandaag": 8.22,
    "verouderd": false
   }
  ]
